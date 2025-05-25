@@ -1,16 +1,31 @@
 import React, { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
+import { FiLogOut } from "react-icons/fi"; // at the top
+
 
 const Dashboard = () => {
   const [userData, setUserData] = useState(null);
   const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchUser = async () => {
+      const token = localStorage.getItem("token");
+
+      if (!token) {
+        setUserData(null);
+        setLoading(false);
+        return;
+      }
+
       try {
-        const res = await axios.get("/api/auth/user", { withCredentials: true });
-        setUserData(res.data);
+        const res = await axios.get("http://localhost:5000/api/auth/profile", {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        setUserData(res.data.user);
       } catch (error) {
         console.error("Error fetching user:", error);
         setUserData(null);
@@ -34,19 +49,34 @@ const Dashboard = () => {
     }
   };
 
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+    navigate("/login");
+  };
+
   return (
     <div className="flex h-screen bg-zinc-500 text-gray-800 font-mono">
-      <aside className="w-64 bg-slate-600 p-5 space-y-4 text-black">
-        <h2 className="text-2xl font-bold">Dashboard</h2>
-        <nav className="space-y-2">
-          <Link to="/create-group" className="block p-2 hover:bg-gray-200 rounded">Create Group</Link>
-          <Link to="/join-group" className="block p-2 hover:bg-gray-200 rounded">Join Group</Link>
-          <Link to="/expense-history" className="block p-2 hover:bg-gray-200 rounded">Expense History</Link>
-          <Link to="/notifications" className="block p-2 hover:bg-gray-200 rounded">New Notifications</Link>
-          <Link to="/settle-up" className="block p-2 hover:bg-gray-200 rounded">Settle Up</Link>
-          <Link to="/profile" className="block p-2 hover:bg-gray-200 rounded">Profile Management</Link>
-        </nav>
-      </aside>
+     <aside className="w-64 bg-slate-600 p-5 space-y-4 text-black">
+  <h2 className="text-2xl font-bold mb-4">Dashboard</h2>
+  <nav className="space-y-2">
+    <Link to="/create-group" className="block p-2 hover:bg-gray-200 rounded">Create Group</Link>
+    <Link to="/join-group" className="block p-2 hover:bg-gray-200 rounded">Join Group</Link>
+    <Link to="/expense-history" className="block p-2 hover:bg-gray-200 rounded">Expense History</Link>
+    <Link to="/notifications" className="block p-2 hover:bg-gray-200 rounded">New Notifications</Link>
+    <Link to="/settle-up" className="block p-2 hover:bg-gray-200 rounded">Settle Up</Link>
+    <Link to="/profile" className="block p-2 hover:bg-gray-200 rounded">Profile Management</Link>
+    <div
+  onClick={handleLogout}
+  className="flex items-center gap-2 p-2 hover:bg-gray-200 rounded cursor-pointer text-left"
+>
+  <FiLogOut className="text-lg" />
+  <span>Logout</span>
+</div>
+
+  </nav>
+</aside>
+
 
       <main className="flex-1 p-6 flex flex-col items-center justify-center">
         <h1 className="text-3xl font-bold mb-4">Welcome</h1>
