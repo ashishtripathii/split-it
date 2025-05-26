@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Menu, X, User } from "lucide-react";
+import { Menu, X, User, UserPlus, MessageSquare, Phone, Info } from "lucide-react";
 import { FaHome } from "react-icons/fa";
 import { Link } from "react-router-dom";
 import logo from "../assets/logo.png";
@@ -10,8 +10,7 @@ const Header = () => {
   const [menuOpen, setMenuOpen] = useState(false);
 
   return (
-    <header className="bg-blue-900 text-white shadow-md sticky top-0 z-50">
-      {/* Toast Notifications */}
+    <header className="bg-teal-800 text-white shadow-md sticky top-0 z-50">
       <ToastContainer
         autoClose={3000}
         hideProgressBar={false}
@@ -23,9 +22,7 @@ const Header = () => {
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center py-4">
-          {/* Logo Section */}
           <Link to="/" className="flex items-center space-x-3">
-            {/* Replace with your actual logo import */}
             <img src={logo} alt="Logo" className="h-20 w-20 object-cover" />
             <span className="text-2xl font-bold animate-pulse font-serif">
               SPLIT-IT
@@ -34,24 +31,19 @@ const Header = () => {
 
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center space-x-6 font-mono font-bold">
-            <Link
-              to="/"
-              className="hover:text-blue-400 flex items-center transition-all duration-300"
-            >
+            <Link to="/" className="hover:text-blue-400 flex items-center">
               <FaHome className="mr-2" /> Home
             </Link>
-            <Link
-              to="/register"
-              className="hover:text-blue-400 flex items-center transition-all"
-            >
-              <User className="mr-2" /> Register
+            <Link to="/about" className="hover:text-blue-400 flex items-center">
+              <Info className="mr-2" /> About
             </Link>
-            <Link
-              to="/login"
-              className="hover:text-blue-400 flex items-center transition-all"
-            >
-              <User className="mr-2" /> Log In
+            <Link to="/contact" className="hover:text-blue-400 flex items-center">
+              <Phone className="mr-2" /> Contact
             </Link>
+            <Link to="/feedback" className="hover:text-blue-400 flex items-center">
+              <MessageSquare className="mr-2" /> Feedback
+            </Link>
+           
           </nav>
 
           {/* Mobile Menu Button */}
@@ -70,24 +62,19 @@ const Header = () => {
           }`}
         >
           <nav className="flex flex-col bg-gray-900 text-white rounded-md p-4 space-y-2">
-            <Link
-              to="/"
-              className="flex items-center py-2 px-4 hover:bg-gray-800 transition-all"
-            >
+            <Link to="/" className="flex items-center py-2 px-4 hover:bg-gray-800">
               <FaHome className="mr-2" /> Home
             </Link>
-            <Link
-              to="/register"
-              className="flex items-center py-2 px-4 hover:bg-gray-800 transition-all"
-            >
-              <User className="mr-2" /> Register
+            <Link to="/about" className="flex items-center py-2 px-4 hover:bg-gray-800">
+              <Info className="mr-2" /> About
             </Link>
-            <Link
-              to="/login"
-              className="flex items-center py-2 px-4 hover:bg-gray-800 transition-all"
-            >
-              <User className="mr-2" /> Log In
+            <Link to="/contact" className="flex items-center py-2 px-4 hover:bg-gray-800">
+              <Phone className="mr-2" /> Contact
             </Link>
+            <Link to="/feedback" className="flex items-center py-2 px-4 hover:bg-gray-800">
+              <MessageSquare className="mr-2" /> Feedback
+            </Link>
+            
           </nav>
         </div>
       </div>

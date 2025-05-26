@@ -1,6 +1,5 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { FcGoogle } from "react-icons/fc";
 import { AiFillEye, AiFillEyeInvisible } from "react-icons/ai";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -17,7 +16,7 @@ export default function LoginPage() {
     e.preventDefault();
 
     if (!email || !password) {
-      toast.error("All fields are required!", { position: "top-center" });
+      toast.error("All fields are required!");
       return;
     }
 
@@ -31,142 +30,127 @@ export default function LoginPage() {
       const data = await response.json();
 
       if (!response.ok) {
-        toast.error(data.message || "Login failed", { position: "top-center" });
+        toast.error(data.message || "Login failed");
         return;
       }
 
       localStorage.setItem("token", data.token);
 
-      toast.success("Login successful! 🎉", { position: "top-center" });
+      toast.success("Login successful! 🎉");
       setTimeout(() => navigate("/dashboard"), 2000);
     } catch (error) {
       console.error("Login error:", error);
-      toast.error("Something went wrong. Please try again.", {
-        position: "top-center",
-      });
+      toast.error("Something went wrong. Please try again.");
     }
   };
 
- const handleForgotPassword = async () => {
-  if (!email) {
-    toast.error("Please enter your email to reset password!", { position: "top-center" });
-    return;
-  }
-
-  try {
-    const res = await fetch("http://localhost:5000/api/auth/forgot-password", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email }),
-    });
-
-    const data = await res.json();
-    if (!res.ok) {
-      toast.error(data.message || "Failed to send reset link", { position: "top-center" });
+  const handleForgotPassword = async () => {
+    if (!email) {
+      toast.error("Please enter your email to reset password!");
       return;
     }
 
-    toast.success("Password reset link sent! 📧", { position: "top-center" });
-  } catch (err) {
-    console.error("Forgot Password Error:", err);
-    toast.error("Something went wrong. Please try again.", { position: "top-center" });
-  }
-};
+    try {
+      const res = await fetch("http://localhost:5000/api/auth/forgot-password", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      });
 
+      const data = await res.json();
+      if (!res.ok) {
+        toast.error(data.message || "Failed to send reset link");
+        return;
+      }
+
+      toast.success("Password reset link sent! 📧");
+    } catch (err) {
+      console.error("Forgot Password Error:", err);
+      toast.error("Something went wrong. Please try again.");
+    }
+  };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-sky-500 to-indigo-500 flex items-center justify-center px-4">
-      <ToastContainer />
-      <div className="bg-white rounded-2xl shadow-lg max-w-5xl w-full flex flex-col md:flex-row overflow-hidden">
-        
-        <div className="md:w-1/2 hidden md:block bg-gray-100">
-          <img src={authImage} alt="Auth" className="w-full h-full object-cover" />
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-cyan-100 to-teal-100 p-6">
+      <ToastContainer position="top-center" autoClose={3000} />
+      <div className="flex flex-col md:flex-row max-w-5xl w-full shadow-2xl rounded-2xl overflow-hidden bg-white">
+        <div className="w-full md:w-1/2 p-6 bg-teal-200 hidden md:flex">
+          <img src={authImage} alt="Decorative Illustration" className="w-full h-auto object-cover" />
         </div>
+        <div className="w-full md:w-1/2 p-8 bg-white flex flex-col justify-center">
+          <h2 className="text-3xl font-extrabold text-teal-900 text-center mb-6 font-serif">
+            Login to Split-It
+          </h2>
+                   <div className="flex items-center mb-6">
+  <hr className="flex-grow border-t border-black" />
+  <span className="mx-3 text-teal-500 font-semibold">OR</span>
+  <hr className="flex-grow border-t border-black" />
+</div>
+          <div className="mb-4 flex justify-center">
+  <div className="w-full max-w-xs">
+    <GoogleLogin
+      width="300"               // wider button
+      size="large"              // larger size
+      theme="outline"           // light style, no solid fill
+      shape="rectangular"       // rectangular shape (no circle)
+      onSuccess={async (credentialResponse) => {
+        try {
+          const res = await fetch("http://localhost:5000/api/auth/google", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ idToken: credentialResponse.credential }),
+          });
 
-        <div className="w-full md:w-1/2 p-8 flex flex-col justify-center">
-          <h2 className="text-4xl font-bold text-center text-indigo-700 mb-6 font-serif">Login to Split-It</h2>
+          const data = await res.json();
 
-          <div className="flex justify-center mb-4">
-            <GoogleLogin
-              onSuccess={async (credentialResponse) => {
-                try {
-                  const res = await fetch("http://localhost:5000/api/auth/google", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ idToken: credentialResponse.credential }),
-                  });
+          if (!res.ok) {
+            toast.error(data.message || "Google Sign-In failed");
+            return;
+          }
 
-                  const data = await res.json();
+          localStorage.setItem("token", data.token);
+          toast.success("Google Sign-In successful! 🎉");
+          setTimeout(() => navigate("/dashboard"), 2000);
+        } catch (err) {
+          console.error("Google Sign-In Error:", err);
+          toast.error("Something went wrong. Try again later.");
+        }
+      }}
+      onError={() => {
+        toast.error("Google Sign-In was cancelled or failed.");
+      }}
+    />
+  </div>
+</div>
 
-                  if (!res.ok) {
-                    toast.error(data.message || "Google Sign-In failed", { position: "top-center" });
-                    return;
-                  }
-
-                  localStorage.setItem("token", data.token);
-                  toast.success("Google Sign-In successful! 🎉", { position: "top-center" });
-                  setTimeout(() => navigate("/dashboard"), 2000);
-                } catch (err) {
-                  console.error("Google Sign-In Error:", err);
-                  toast.error("Something went wrong. Try again later.", { position: "top-center" });
-                }
-              }}
-              onError={() => {
-                toast.error("Google Sign-In was cancelled or failed.", { position: "top-center" });
-              }}
+          <form onSubmit={handleLogin} className="space-y-6">
+            <input
+              type="email"
+              placeholder="Email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+              className="w-full p-4 border border-teal-400 rounded-lg focus:ring-2 focus:ring-teal-600 focus:outline-none"
             />
-          </div>
-
-          <div className="relative my-4">
-            <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-gray-300" />
-            </div>
-            <div className="relative flex justify-center text-sm">
-              <span className="bg-white px-2 text-gray-500">or continue with email</span>
-            </div>
-          </div>
-
-          <form onSubmit={handleLogin} className="space-y-5">
-            <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
-                Email Address
-              </label>
+            <div className="relative w-full">
               <input
-                type="email"
-                id="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                type={showPassword ? "text" : "password"}
+                placeholder="Password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
                 required
-                className="w-full px-4 py-3 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
+                className="w-full p-4 border border-teal-400 rounded-lg focus:ring-2 focus:ring-teal-600 focus:outline-none"
               />
+              <span
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-4 top-1/2 transform -translate-y-1/2 cursor-pointer text-teal-600"
+              >
+                {showPassword ? <AiFillEyeInvisible size={24} /> : <AiFillEye size={24} />}
+              </span>
             </div>
-
-            <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
-                Password
-              </label>
-              <div className="relative">
-                <input
-                  type={showPassword ? "text" : "password"}
-                  id="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                  className="w-full px-4 py-3 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-3 text-gray-500 hover:text-gray-700"
-                >
-                  {showPassword ? <AiFillEyeInvisible size={22} /> : <AiFillEye size={22} />}
-                </button>
-              </div>
-            </div>
-
             <button
               type="submit"
-              className="w-full py-3 bg-indigo-600 text-white font-semibold rounded-lg hover:bg-indigo-700 transition duration-300"
+              className="w-full bg-teal-700 text-white py-3 px-4 rounded-lg hover:bg-teal-800 transition duration-300"
             >
               Login
             </button>
@@ -175,15 +159,15 @@ export default function LoginPage() {
           <div className="flex justify-end mt-3">
             <button
               onClick={handleForgotPassword}
-              className="text-sm text-indigo-600 hover:underline"
+              className="text-sm text-teal-700 hover:underline"
             >
               Forgot Password?
             </button>
           </div>
 
-          <p className="text-sm text-center text-gray-600 mt-6">
+          <p className="text-center text-teal-900 mt-4">
             Don't have an account?{" "}
-            <Link to="/register" className="text-indigo-600 font-medium hover:underline">
+            <Link to="/register" className="text-teal-600 font-semibold hover:underline">
               Register
             </Link>
           </p>
