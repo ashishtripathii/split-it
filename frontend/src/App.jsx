@@ -9,6 +9,7 @@ import NotFound from './pages/NotFound';
 import LoginPage from './pages/LoginPage';
 import Dashboard from './pages/Dashboard';
 import ResetPasswordPage from "./pages/ResetPasswordPage";
+import CreateGroup from "./pages/CreateGroup"
 const App = () => {
   return (
   
@@ -25,7 +26,7 @@ const App = () => {
           <Route path='/login' element={<LoginPage />} />
           <Route path='/dashboard' element={<Dashboard />} />
           <Route path="/reset-password/:token" element={<ResetPasswordPage />} />
-
+          <Route path="/create-group" element={<CreateGroup />} />
         </Routes>
       </Layout>
   

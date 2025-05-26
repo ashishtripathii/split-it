@@ -20,7 +20,7 @@ exports.register = async (req, res) => {
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    const newUser = new User({ fullName, email, password: hashedPassword });
+    const newUser = new User({ fullName, email, password: hashedPassword, isGoogleUser: false });
     await newUser.save();
 
     const token = generateToken(newUser._id);
@@ -41,7 +41,7 @@ exports.login = async (req, res) => {
 
   try {
     const user = await User.findOne({ email });
-    if (!user)
+    if (!user || user.isGoogleUser)
       return res.status(401).json({ message: 'Invalid credentials' });
 
     const isMatch = await bcrypt.compare(password, user.password);
@@ -60,8 +60,6 @@ exports.login = async (req, res) => {
     res.status(500).json({ message: 'Server error' });
   }
 };
-
-
 
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
@@ -83,16 +81,14 @@ exports.googleLogin = async (req, res) => {
       user = new User({
         fullName: name,
         email,
-        password: "google_auth", // dummy, won't be used
+        isGoogleUser: true, // Set Google flag
       });
       await user.save();
     }
 
-    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
-      expiresIn: process.env.JWT_EXPIRES_IN,
-    });
+    const token = generateToken(user._id);
 
-    res.json({
+    res.status(200).json({
       message: "Google login successful",
       user: { id: user._id, email: user.email, fullName: user.fullName },
       token,
@@ -110,11 +106,14 @@ exports.forgotPassword = async (req, res) => {
     const user = await User.findOne({ email });
     if (!user) return res.status(404).json({ message: "User not found" });
 
+    if (user.isGoogleUser) {
+      return res.status(400).json({ message: "Password reset is not available for Google Sign-In users." });
+    }
+
     const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: "15m" });
 
     const resetLink = `http://localhost:5173/reset-password/${token}`;
 
-    // Send email
     const transporter = nodemailer.createTransport({
       service: "Gmail",
       auth: {
@@ -146,7 +145,10 @@ exports.resetPassword = async (req, res) => {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    await User.findByIdAndUpdate(decoded.id, { password: hashedPassword });
+    await User.findByIdAndUpdate(decoded.id, {
+      password: hashedPassword,
+      isGoogleUser: false, // Allow hybrid login after password reset
+    });
 
     res.status(200).json({ message: "Password updated successfully" });
   } catch (err) {
@@ -154,5 +156,3 @@ exports.resetPassword = async (req, res) => {
     res.status(400).json({ message: "Invalid or expired token" });
   }
 };
-
-
