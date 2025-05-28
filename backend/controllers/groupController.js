@@ -1,6 +1,7 @@
 const Group = require('../models/Group');
 const sendEmail = require('../utils/sendEmail');
 
+// Create group and send invitations
 const createGroup = async (req, res) => {
   try {
     const { name, members } = req.body;
@@ -48,6 +49,8 @@ const createGroup = async (req, res) => {
     res.status(500).json({ message: 'Server error' });
   }
 };
+
+// Join group
 const joinGroup = async (req, res) => {
   try {
     const group = await Group.findById(req.params.groupId);
@@ -71,4 +74,76 @@ const joinGroup = async (req, res) => {
   }
 };
 
-module.exports = { createGroup, joinGroup }; // assuming createGroup already defined
+// ✅ Reject group invitation
+const rejectGroup = async (req, res) => {
+  try {
+    const group = await Group.findById(req.params.groupId);
+    if (!group) return res.status(404).json({ message: 'Group not found' });
+
+    const userEmail = req.user.email;
+    const memberIndex = group.members.findIndex(m => m.email === userEmail);
+
+    if (memberIndex === -1) {
+      return res.status(403).json({ message: 'You are not invited to this group' });
+    }
+
+    const member = group.members[memberIndex];
+
+    if (member.status === 'joined') {
+      return res.status(400).json({ message: 'You have already joined the group' });
+    }
+
+    // Remove the invitation
+    group.members.splice(memberIndex, 1);
+    await group.save();
+
+    res.json({ message: 'You have rejected the group invitation' });
+  } catch (err) {
+    console.error('Reject Group Error:', err);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+const getUserInvitations = async (req, res) => {
+  try {
+    const userEmail = req.user.email;
+    const groups = await Group.find({ "members.email": userEmail });
+    const invitations = groups
+      .map(group => {
+        const member = group.members.find(m => m.email === userEmail);
+        if (member && member.status === 'invited') {
+          return {
+            _id: group._id,
+            name: group.name,
+            inviterName: group.createdBy, // yahan agar createdBy me naam nahi hai toh populate karo
+            status: member.status,
+          };
+        }
+        return null;
+      })
+      .filter(Boolean);
+
+    res.json({ invitations }); // <-- yeh zaroori hai
+  } catch (err) {
+    console.error("Error fetching invitations:", err);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+const getJoinedGroups = async (req, res) => {
+  try {
+    const userEmail = req.user.email;
+
+    const groups = await Group.find({
+      members: {
+        $elemMatch: { email: userEmail, status: 'joined' }
+      }
+    });
+
+    res.status(200).json({ groups });
+  } catch (error) {
+    console.error("Error fetching joined groups:", error);
+    res.status(500).json({ message: "Server error fetching joined groups" });
+  }
+};
+
+
+module.exports = { createGroup, joinGroup, rejectGroup,getUserInvitations , getJoinedGroups };

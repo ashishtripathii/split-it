@@ -177,7 +177,7 @@ function HomePage() {
               alt={testimonials[currentTestimonial].alt}
               className="w-28 h-28 rounded-full object-cover shadow-lg mb-6"
             />
-            <p className="text-gray-900 text-2xl md:text-3xl font-serif mb-8 italic max-w-4xl mx-auto px-6 leading-relaxed">
+            <p className="text-gray-900 text-2xl md:text-xl font-serif mb-8 italic max-w-4xl mx-auto px-6 leading-relaxed">
               "{testimonials[currentTestimonial].feedback}"
             </p>
             <h3 className="text-teal-800 text-2xl font-semibold font-serif">

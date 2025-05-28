@@ -29,6 +29,7 @@ const App = () => {
           <Route path="/reset-password/:token" element={<ResetPasswordPage />} />
           <Route path="/create-group" element={<CreateGroup />} />
           <Route path="/group/join/:groupId" element={<JoinGroupPage />} />
+          <Route path="/join-group" element={<JoinGroupPage />} />
         </Routes>
       </Layout>
   

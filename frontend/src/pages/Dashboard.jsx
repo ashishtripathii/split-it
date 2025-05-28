@@ -1,16 +1,16 @@
 import React, { useEffect, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
-import { FiLogOut } from "react-icons/fi"; // at the top
-
+import DashBoardAside from "../components/DashBoardAside";
 
 const Dashboard = () => {
   const [userData, setUserData] = useState(null);
+  const [groups, setGroups] = useState([]);
   const [loading, setLoading] = useState(true);
-  const navigate = useNavigate();
+  const [expandedGroupId, setExpandedGroupId] = useState(null);
+  const [groupDetails, setGroupDetails] = useState({});
 
   useEffect(() => {
-    const fetchUser = async () => {
+    const fetchUserAndGroups = async () => {
       const token = localStorage.getItem("token");
 
       if (!token) {
@@ -20,92 +20,154 @@ const Dashboard = () => {
       }
 
       try {
-        const res = await axios.get("http://localhost:5000/api/auth/profile", {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+        const resUser = await axios.get("http://localhost:5000/api/auth/profile", {
+          headers: { Authorization: `Bearer ${token}` },
         });
-        setUserData(res.data.user);
+        setUserData(resUser.data.user);
+
+        const resGroups = await axios.get("http://localhost:5000/api/groups/joined", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        setGroups(resGroups.data.groups || []);
       } catch (error) {
-        console.error("Error fetching user:", error);
-        setUserData(null);
+        console.error("Error fetching data:", error);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchUser();
+    fetchUserAndGroups();
   }, []);
 
   const getInitials = (nameOrEmail) => {
     if (!nameOrEmail) return "U";
     const words = nameOrEmail.trim().split(" ");
-    if (words.length > 1) {
-      return words[0][0] + words[1][0];
-    } else if (nameOrEmail.includes("@")) {
-      return nameOrEmail[0].toUpperCase();
-    } else {
-      return words[0][0].toUpperCase();
+    return words.length > 1
+      ? words[0][0] + words[1][0]
+      : nameOrEmail[0].toUpperCase();
+  };
+
+  const handleToggleGroup = async (groupId) => {
+    if (expandedGroupId === groupId) {
+      setExpandedGroupId(null); // Collapse
+      return;
+    }
+
+    try {
+      const token = localStorage.getItem("token");
+      const res = await axios.get(`http://localhost:5000/api/groups/details/${groupId}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      setGroupDetails((prev) => ({
+        ...prev,
+        [groupId]: res.data.group,
+      }));
+      setExpandedGroupId(groupId);
+    } catch (err) {
+      console.error("Error fetching group details:", err);
     }
   };
 
-  const handleLogout = () => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("user");
-    navigate("/login");
-  };
-
   return (
-  // ...existing code...
-
-  <div className="flex min-h-screen bg-gradient-to-br from-cyan-100 to-teal-50  font-mono">
-    <aside className="w-64 bg-white/80 backdrop-blur p-5 space-y-4 text-teal-900 shadow-lg">
-      <h2 className="text-2xl font-bold mb-4">Dashboard</h2>
-      <nav className="space-y-2">
-        <Link to="/create-group" className="block p-2 hover:bg-teal-100 rounded">Create Group</Link>
-        <Link to="/join-group" className="block p-2 hover:bg-teal-100 rounded">Join Group</Link>
-        <Link to="/expense-history" className="block p-2 hover:bg-teal-100 rounded">Expense History</Link>
-        <Link to="/notifications" className="block p-2 hover:bg-teal-100 rounded">New Notifications</Link>
-        <Link to="/settle-up" className="block p-2 hover:bg-teal-100 rounded">Settle Up</Link>
-        <Link to="/profile" className="block p-2 hover:bg-cyan-300 rounded">Profile Management</Link>
-        <div
-          onClick={handleLogout}
-          className="flex items-center gap-2 p-2 hover:bg-teal-100 rounded cursor-pointer text-left"
-        >
-          <FiLogOut className="text-lg" />
-          <span>Logout</span>
-        </div>
-      </nav>
-    </aside>
-
-    <main className="flex-1 p-8 flex flex-col items-center justify-center">
-      <h1 className="text-3xl font-bold mb-4 text-black drop-shadow">Welcome</h1>
-      {loading ? (
-        <p className="text-lg text-black">Fetching user details...</p>
-      ) : userData ? (
-        <>
-          {userData.profileImage ? (
-            <img 
-              src={userData.profileImage} 
-              alt="Profile" 
-              className="w-24 h-24 rounded-full mb-4 border-4 border-teal-200 shadow-lg"
-            />
-          ) : (
-            <div className="w-24 h-24 rounded-full flex items-center justify-center bg-teal-500 text-black text-3xl font-bold mb-4 border-4 border-teal-200 shadow-lg">
-              {getInitials(userData.fullName || userData.email)}
+    <div className="flex min-h-screen bg-gradient-to-br from-cyan-100 to-teal-50 font-mono">
+      <DashBoardAside />
+      <main className="flex-1 p-8">
+        <div className="max-w-3xl mx-auto bg-white p-6 rounded-2xl shadow-xl">
+          <h1 className="text-3xl font-bold text-center text-teal-700 mb-6 drop-shadow">
+            Welcome to Dashboard
+          </h1>
+          {loading ? (
+            <p className="text-center text-lg text-black">Loading...</p>
+          ) : userData ? (
+            <div className="text-center mb-6">
+              {userData.profileImage ? (
+                <img
+                  src={userData.profileImage}
+                  alt="Profile"
+                  className="w-24 h-24 mx-auto rounded-full border-4 border-teal-300 shadow-lg mb-4"
+                />
+              ) : (
+                <div className="w-24 h-24 mx-auto rounded-full flex items-center justify-center bg-teal-500 text-white text-3xl font-bold mb-4 border-4 border-teal-300 shadow-lg">
+                  {getInitials(userData.fullName || userData.email)}
+                </div>
+              )}
+              <p className="text-lg text-black">
+                Name: <span className="font-bold">{userData.fullName || "N/A"}</span>
+              </p>
+              <p className="text-lg text-black">
+                Email: <span className="font-bold">{userData.email}</span>
+              </p>
             </div>
+          ) : (
+            <p className="text-lg text-center text-black">User not found! Please log in again.</p>
           )}
-          <p className="text-lg text-black">Name: <span className="font-bold">{userData.fullName || "N/A"}</span></p>
-          <p className="text-lg text-black">Email: <span className="font-bold">{userData.email}</span></p>
-        </>
-      ) : (
-        <p className="text-lg text-black">User not found! Please log in again.</p>
-      )}
-    </main>
-  </div>
-);
-// ...existing code...
-  
+
+          {/* Joined Groups Section */}
+          <div className="mt-8">
+            <h2 className="text-2xl font-semibold text-teal-700 mb-4 text-center">
+              Your Joined Groups
+            </h2>
+            {groups.length === 0 ? (
+              <p className="text-center text-gray-600">You have not joined any groups yet.</p>
+            ) : (
+              <ul className="space-y-4">
+                {groups.map((group) => (
+                  <li key={group._id} className="rounded-xl shadow transition">
+                    <div
+                      className={`flex justify-between items-center px-4 py-3 bg-gradient-to-r from-teal-100 to-cyan-200 rounded-xl cursor-pointer hover:scale-[1.01] hover:shadow-lg transition`}
+                      onClick={() => handleToggleGroup(group._id)}
+                    >
+                      <h3 className="text-lg md:text-xl font-semibold text-slate-600 select-none">
+                        {group.name}
+                      </h3>
+                      <span className="text-white font-bold text-lg">
+                        {expandedGroupId === group._id ? "▲" : "▼"}
+                      </span>
+                    </div>
+
+                    {/* Animated expand/collapse */}
+                    <div
+                      className={`overflow-hidden transition-all duration-300 ${
+                        expandedGroupId === group._id ? "max-h-[500px] opacity-100" : "max-h-0 opacity-0"
+                      }`}
+                    >
+                      {expandedGroupId === group._id && groupDetails[group._id] && (
+                        <div className="bg-white p-6 rounded-b-xl shadow-inner border-t border-teal-100">
+                          <p className="text-gray-700 mb-4">
+                            <span className="font-semibold text-teal-700">Description:</span>{" "}
+                            {groupDetails[group._id].description || "No description"}
+                          </p>
+                          <h4 className="font-semibold text-teal-700 mb-2">Members:</h4>
+                          {groupDetails[group._id].members.length === 0 ? (
+                            <p className="text-gray-500">No members yet.</p>
+                          ) : (
+                            <ul className="space-y-2">
+                              {groupDetails[group._id].members.map((member) => (
+                                <li
+                                  key={member._id}
+                                  className="flex justify-between items-center border-b pb-1"
+                                >
+                                  <span className="text-gray-800">{member.fullName} ({member.email})</span>
+                                  <span className="text-sm text-teal-700 font-semibold">
+                                    {member.status}
+                                  </span>
+                                </li>
+                              ))}
+                            </ul>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        </div>
+      </main>
+    </div>
+  );
 };
 
 export default Dashboard;

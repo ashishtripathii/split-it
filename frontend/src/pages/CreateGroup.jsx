@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
-
+import DashBoardAside from "../components/DashBoardAside";
+import { toast } from "react-toastify";
 const CreateGroup = () => {
   const [groupName, setGroupName] = useState("");
   const [groupMembers, setGroupMembers] = useState([]);
@@ -11,38 +12,30 @@ const CreateGroup = () => {
   useEffect(() => {
     const fetchCurrentUser = async () => {
       const token = localStorage.getItem("token");
-
-      // ───── no token? send them to login and stop loading ─────
       if (!token) {
         setLoading(false);
         navigate("/login");
         return;
       }
-
       try {
         const { data } = await axios.get(
           "http://localhost:5000/api/auth/profile",
           { headers: { Authorization: `Bearer ${token}` } }
         );
-
         const admin = {
           name: data.user.fullName || data.user.name || "Me",
           email: data.user.email,
           isAdmin: true,
         };
-
         setGroupMembers([admin]);
       } catch (err) {
         console.error("Profile fetch failed:", err.response?.data || err);
       } finally {
-        setLoading(false);       // ✅ ALWAYS clear the spinner
+        setLoading(false);
       }
     };
-
     fetchCurrentUser();
   }, [navigate]);
-
-  /* ---------- handlers ---------- */
 
   const handleMemberChange = (i, field, val) => {
     setGroupMembers((prev) =>
@@ -54,7 +47,7 @@ const CreateGroup = () => {
     setGroupMembers([...groupMembers, { name: "", email: "", isAdmin: false }]);
 
   const deleteMember = (i) =>
-    i !== 0 && setGroupMembers(groupMembers.filter((_, idx) => idx !== i)); // keep admin
+    i !== 0 && setGroupMembers(groupMembers.filter((_, idx) => idx !== i));
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -62,7 +55,6 @@ const CreateGroup = () => {
       alert("Fill in group name and every member’s name & email.");
       return;
     }
-
     try {
       await axios.post(
         "http://localhost:5000/api/groups/create",
@@ -72,83 +64,112 @@ const CreateGroup = () => {
       alert("Group created & invites sent!");
       navigate("/dashboard");
     } catch (err) {
-      console.error("Create error:", err.response?.data || err);
-      alert("Couldn’t create the group.");
+      console.error("Group creation failed:", err.response?.data || err);
+toast.success("Group created & invites sent!");
+// and on error:
+toast.error("Couldn't create the group.");
+
     }
   };
 
-  /* ---------- render ---------- */
-
-  if (loading) return <p className="text-center mt-10">Loading…</p>;
+  if (loading)
+    return (
+      <div className="flex items-center justify-center h-screen bg-gradient-to-br from-cyan-100 to-teal-50">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-teal-600"></div>
+      </div>
+    );
 
   return (
-    <div className="max-w-xl mx-auto mt-10 bg-white p-6 shadow rounded">
-      <h2 className="text-2xl font-bold mb-4 text-center">Create Group</h2>
-
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <input
-          className="w-full border p-2 rounded"
-          placeholder="Group name"
-          value={groupName}
-          onChange={(e) => setGroupName(e.target.value)}
-          required
-        />
-
-        <h3 className="font-semibold text-lg">Members</h3>
-
-        {groupMembers.map((m, i) => (
-          <div key={i} className="flex items-center gap-2 mb-2">
-            <input
-              disabled={m.isAdmin}
-              value={m.name}
-              onChange={(e) => handleMemberChange(i, "name", e.target.value)}
-              placeholder="Name"
-              className={`border p-2 rounded w-1/3 ${
-                m.isAdmin && "bg-gray-100"
-              }`}
-              required
-            />
-            <input
-              disabled={m.isAdmin}
-              value={m.email}
-              onChange={(e) => handleMemberChange(i, "email", e.target.value)}
-              placeholder="Email"
-              className={`border p-2 rounded w-1/2 ${
-                m.isAdmin && "bg-gray-100"
-              }`}
-              required
-            />
-            {m.isAdmin ? (
-              <span className="text-xs font-semibold text-green-600">
-                (Admin)
-              </span>
-            ) : (
+    <div className="flex min-h-screen bg-gradient-to-br from-cyan-100 to-teal-50 font-mono">
+      <DashBoardAside />
+      <main className="flex-1 p-8 flex flex-col items-center justify-center">
+        <div className="w-full max-w-xl bg-white p-10 rounded-2xl shadow-xl border border-gray-200">
+          <h2 className="text-3xl font-extrabold text-teal-900 text-center mb-6 font-serif">
+            Create a New Group
+          </h2>
+          <form onSubmit={handleSubmit} className="space-y-6">
+            <div>
+              <label className="block text-gray-700 font-semibold mb-2">
+                Group Name
+              </label>
+              <input
+                className="w-full border border-gray-300 bg-white text-gray-900 p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-400 placeholder:text-gray-400"
+                placeholder="Enter group name"
+                value={groupName}
+                onChange={(e) => setGroupName(e.target.value)}
+                required
+              />
+            </div>
+            <div>
+              <h3 className="font-bold text-lg mb-3 text-teal-500">Members</h3>
+              <div className="space-y-3">
+                {groupMembers.map((m, i) => (
+                  <div
+                    key={i}
+                    className="flex flex-col md:flex-row items-center gap-2 bg-teal-50 p-3 rounded-lg border border-teal-200"
+                  >
+                    <input
+                      disabled={m.isAdmin}
+                      value={m.name}
+                      onChange={(e) =>
+                        handleMemberChange(i, "name", e.target.value)
+                      }
+                      placeholder="Name"
+                      className={`border p-2 rounded w-full md:w-1/3 focus:outline-none focus:ring-2 ${
+                        m.isAdmin
+                          ? "bg-gray-100 text-gray-400"
+                          : "bg-white text-gray-800 focus:ring-teal-400"
+                      }`}
+                      required
+                    />
+                    <input
+                      disabled={m.isAdmin}
+                      value={m.email}
+                      onChange={(e) =>
+                        handleMemberChange(i, "email", e.target.value)
+                      }
+                      placeholder="Email"
+                      className={`border p-2 rounded w-full md:w-1/2 focus:outline-none focus:ring-2 ${
+                        m.isAdmin
+                          ? "bg-gray-100 text-gray-400"
+                          : "bg-white text-gray-800 focus:ring-teal-400"
+                      }`}
+                      required
+                    />
+                    {m.isAdmin ? (
+                      <span className="text-xs font-semibold text-green-600 ml-2">
+                        (Admin)
+                      </span>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => deleteMember(i)}
+                        className="ml-2 text-red-500 text-lg hover:bg-red-100 rounded-full w-8 h-8 flex items-center justify-center transition"
+                        title="Remove member"
+                      >
+                        &times;
+                      </button>
+                    )}
+                  </div>
+                ))}
+              </div>
               <button
                 type="button"
-                onClick={() => deleteMember(i)}
-                className="text-red-500 text-sm hover:underline"
+                onClick={addMember}
+                className="mt-4 px-4 py-2 bg-teal-600 text-white font-semibold rounded-lg hover:bg-teal-700 transition shadow"
               >
-                ✖
+                + Add Member
               </button>
-            )}
-          </div>
-        ))}
-
-        <button
-          type="button"
-          onClick={addMember}
-          className="text-blue-600 font-medium hover:underline"
-        >
-          + Add Member
-        </button>
-
-        <button
-          type="submit"
-          className="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700"
-        >
-          Create Group &amp; Send Invites
-        </button>
-      </form>
+            </div>
+            <button
+              type="submit"
+              className="w-full bg-teal-500 text-white py-3 rounded-xl font-bold text-lg shadow-md hover:bg-teal-600 transition"
+            >
+              Create Group &amp; Send Invites
+            </button>
+          </form>
+        </div>
+      </main>
     </div>
   );
 };
