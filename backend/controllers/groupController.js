@@ -128,22 +128,71 @@ const getUserInvitations = async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 };
-const getJoinedGroups = async (req, res) => {
-  try {
-    const userEmail = req.user.email;
+// const getJoinedGroups = async (req, res) => {
+//   try {
+//     const userEmail = req.user.email;
 
-    const groups = await Group.find({
-      members: {
-        $elemMatch: { email: userEmail, status: 'joined' }
-      }
+//     const groups = await Group.find({
+//       members: {
+//         $elemMatch: { email: userEmail, status: 'joined' }
+//       }
+//     });
+
+//     res.status(200).json({ groups });
+//   } catch (error) {
+//     console.error("Error fetching joined groups:", error);
+//     res.status(500).json({ message: "Server error fetching joined groups" });
+//   }
+// };
+
+const getGroupDetails= async (req, res) => {
+  try {
+    const groupId = req.params.groupId;
+
+    const group = await Group.findById(groupId).populate({
+      path: 'members.user',
+      select: 'fullName email',  // select only these fields from user
     });
 
-    res.status(200).json({ groups });
-  } catch (error) {
-    console.error("Error fetching joined groups:", error);
-    res.status(500).json({ message: "Server error fetching joined groups" });
+    if (!group) return res.status(404).json({ message: 'Group not found' });
+
+    // Map members to include user details + status + isAdmin
+    const members = group.members.map((member) => ({
+      _id: member.user._id,
+      fullName: member.user.fullName,
+      email: member.user.email,
+      status: member.status,
+      isAdmin: member.isAdmin,
+    }));
+
+    res.json({
+      group: {
+        _id: group._id,
+        name: group.name,
+        description: group.description || '',
+        members,
+      },
+    });
+  } catch (err) {
+    res.status(500).json({ message: 'Server error' });
   }
 };
 
 
-module.exports = { createGroup, joinGroup, rejectGroup,getUserInvitations , getJoinedGroups };
+const getJoinedGroups=async (req, res) => {
+  try {
+    const userId = req.user._id; // assuming you get userId from auth middleware
+
+    // Find groups where user is a member with status "joined"
+    const groups = await Group.find({
+      'members.user': userId,
+      'members.status': 'joined',
+    }).select('_id name'); // you can select what fields you want here
+
+    res.json({ groups });
+  } catch (err) {
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+module.exports = { createGroup, joinGroup, rejectGroup,getUserInvitations , getJoinedGroups, getGroupDetails };

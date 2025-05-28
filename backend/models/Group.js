@@ -2,8 +2,7 @@
 const mongoose = require('mongoose');
 
 const memberSchema = new mongoose.Schema({
-  name: String,
-  email: String,
+  user: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }, // 👈 Add this line
   isAdmin: { type: Boolean, default: false },
   status: {
     type: String,
@@ -11,6 +10,7 @@ const memberSchema = new mongoose.Schema({
     default: 'invited',
   },
 });
+
 
 const groupSchema = new mongoose.Schema({
   name: { type: String, required: true },

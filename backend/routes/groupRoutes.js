@@ -1,7 +1,8 @@
 const express = require("express");
 const router = express.Router();
-const { createGroup, joinGroup, rejectGroup,getUserInvitations,getJoinedGroups } = require("../controllers/groupController");
+const { createGroup, joinGroup, rejectGroup,getUserInvitations,getJoinedGroups ,getGroupDetails} = require("../controllers/groupController");
 const { protect } = require("../middleware/authMiddleware");
+
 
 router.post("/create", protect, createGroup);
 router.post("/join/:groupId", protect, joinGroup);
@@ -10,6 +11,7 @@ router.delete('/reject/:groupId', protect, rejectGroup);
 // In routes/groups.js or similar
 router.get("/invitations", protect, getUserInvitations);
 router.get("/joined", protect, getJoinedGroups);
+router.get("/details/:id", protect, getGroupDetails);
 router.get('/join/:id', async (req, res) => {
   const { id } = req.params;
 
