@@ -20,7 +20,7 @@ import { useEffect } from 'react';
         <Link to="/expense-history" className="block p-2 hover:bg-teal-100 rounded">Expense History</Link>
         <Link to="/notifications" className="block p-2 hover:bg-teal-100 rounded">New Notifications</Link>
         <Link to="/settle-up" className="block p-2 hover:bg-teal-100 rounded">Settle Up</Link>
-        <Link to="/profile" className="block p-2 hover:bg-cyan-300 rounded">Profile Management</Link>
+        <Link to="/profile" className="block p-2 hover:bg-teal-100 rounded">Profile Management</Link>
         <div
           onClick={handleLogout}
           className="flex items-center gap-2 p-2 hover:bg-teal-100 rounded cursor-pointer text-left"

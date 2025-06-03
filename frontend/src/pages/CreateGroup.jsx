@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from "react";
-import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import DashBoardAside from "../components/DashBoardAside";
 import { toast } from "react-toastify";
+import API from "../utils/axios.js"// <-- import your axios instance
+
 const CreateGroup = () => {
   const [groupName, setGroupName] = useState("");
   const [groupMembers, setGroupMembers] = useState([]);
@@ -18,10 +19,9 @@ const CreateGroup = () => {
         return;
       }
       try {
-        const { data } = await axios.get(
-          "http://localhost:5000/api/auth/profile",
-          { headers: { Authorization: `Bearer ${token}` } }
-        );
+        const { data } = await API.get("/auth/profile", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
         const admin = {
           name: data.user.fullName || data.user.name || "Me",
           email: data.user.email,
@@ -30,6 +30,7 @@ const CreateGroup = () => {
         setGroupMembers([admin]);
       } catch (err) {
         console.error("Profile fetch failed:", err.response?.data || err);
+        toast.error("Failed to fetch user profile");
       } finally {
         setLoading(false);
       }
@@ -52,23 +53,22 @@ const CreateGroup = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!groupName || groupMembers.some((m) => !m.name || !m.email)) {
-      alert("Fill in group name and every member’s name & email.");
+      toast.warn("Please fill in the group name and all members' name & email.");
       return;
     }
     try {
-      await axios.post(
-        "http://localhost:5000/api/groups/create",
+      await API.post(
+        "/groups/create",
         { name: groupName, members: groupMembers },
-        { headers: { Authorization: `Bearer ${localStorage.getItem("token")}` } }
+        {
+          headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+        }
       );
-      alert("Group created & invites sent!");
+      toast.success("Group created & invites sent!");
       navigate("/dashboard");
     } catch (err) {
       console.error("Group creation failed:", err.response?.data || err);
-toast.success("Group created & invites sent!");
-// and on error:
-toast.error("Couldn't create the group.");
-
+      toast.error(err.response?.data?.message || "Failed to create group");
     }
   };
 

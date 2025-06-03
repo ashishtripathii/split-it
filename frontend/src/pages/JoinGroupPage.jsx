@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
-import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import DashBoardAside from '../components/DashBoardAside';
+import API from '../utils/axios'; // Ensure this is correctly configured to point to your backend
 
 const JoinGroupPage = () => {
   const navigate = useNavigate();
@@ -16,9 +16,10 @@ const JoinGroupPage = () => {
       navigate('/login?redirect=/group/join');
       return;
     }
+
     setLoading(true);
     try {
-      const { data } = await axios.get('http://localhost:5000/api/groups/invitations', {
+      const { data } = await API.get('/groups/invitations', {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -33,7 +34,7 @@ const JoinGroupPage = () => {
 
   useEffect(() => {
     fetchInvitations();
-    // eslint-disable-next-line
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [navigate]);
 
   // Handle join/reject actions
@@ -45,17 +46,14 @@ const JoinGroupPage = () => {
 
     try {
       if (action === 'join') {
-        await axios.post(
-          `http://localhost:5000/api/groups/join/${groupId}`,
-          {},
-          { headers: { Authorization: `Bearer ${token}` } }
-        );
-        setActionStatus((prev) => ({ ...prev, [groupId]: 'join' }));
+        await API.post(`/groups/join/${groupId}`, {}, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        setActionStatus((prev) => ({ ...prev, [groupId]: 'joined' }));
       } else if (action === 'reject') {
-        await axios.delete(
-          `http://localhost:5000/api/groups/reject/${groupId}`,
-          { headers: { Authorization: `Bearer ${token}` } }
-        );
+        await API.delete(`/groups/reject/${groupId}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
         setActionStatus((prev) => ({ ...prev, [groupId]: 'rejected' }));
       }
       // Refresh invitations after action

@@ -5,70 +5,59 @@ import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import authImage from "../assets/auth.png";
 import { GoogleLogin } from "@react-oauth/google";
-
+import API from '../utils/axios.js'; // Adjust the import path as necessary
 export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
 
-  const handleLogin = async (e) => {
-    e.preventDefault();
+ const handleLogin = async (e) => {
+  e.preventDefault();
 
-    if (!email || !password) {
-      toast.error("All fields are required!");
-      return;
-    }
+  if (!email || !password) {
+    toast.error("All fields are required!");
+    return;
+  }
 
-    try {
-      const response = await fetch("http://localhost:5000/api/auth/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
-      });
+  try {
+    const response = await API.post("/auth/login", {
+      email,
+      password,
+    });
 
-      const data = await response.json();
+    const data = response.data;
 
-      if (!response.ok) {
-        toast.error(data.message || "Login failed");
-        return;
-      }
+    localStorage.setItem("token", data.token);
 
-      localStorage.setItem("token", data.token);
+    toast.success("Login successful! 🎉");
+    setTimeout(() => navigate("/dashboard"), 2000);
+  } catch (error) {
+    const message =
+      error.response?.data?.message ||
+      "Something went wrong. Please try again.";
+    toast.error(message);
+    console.error("Login error:", error);
+  }
+};
 
-      toast.success("Login successful! 🎉");
-      setTimeout(() => navigate("/dashboard"), 2000);
-    } catch (error) {
-      console.error("Login error:", error);
-      toast.error("Something went wrong. Please try again.");
-    }
-  };
+const handleForgotPassword = async () => {
+  if (!email) {
+    toast.error("Please enter your email to reset password!");
+    return;
+  }
 
-  const handleForgotPassword = async () => {
-    if (!email) {
-      toast.error("Please enter your email to reset password!");
-      return;
-    }
-
-    try {
-      const res = await fetch("http://localhost:5000/api/auth/forgot-password", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email }),
-      });
-
-      const data = await res.json();
-      if (!res.ok) {
-        toast.error(data.message || "Failed to send reset link");
-        return;
-      }
-
-      toast.success("Password reset link sent! 📧");
-    } catch (err) {
-      console.error("Forgot Password Error:", err);
-      toast.error("Something went wrong. Please try again.");
-    }
-  };
+  try {
+    const response = await API.post("/auth/forgot-password", { email });
+    toast.success("Password reset link sent! 📧");
+  } catch (error) {
+    const message =
+      error.response?.data?.message ||
+      "Failed to send reset link";
+    toast.error(message);
+    console.error("Forgot Password Error:", error);
+  }
+};
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-cyan-100 to-teal-100 p-6">
@@ -88,38 +77,37 @@ export default function LoginPage() {
 </div>
           <div className="mb-4 flex justify-center">
   <div className="w-full max-w-xs">
-    <GoogleLogin
-      width="300"               // wider button
-      size="large"              // larger size
-      theme="outline"           // light style, no solid fill
-      shape="rectangular"       // rectangular shape (no circle)
-      onSuccess={async (credentialResponse) => {
-        try {
-          const res = await fetch("http://localhost:5000/api/auth/google", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ idToken: credentialResponse.credential }),
-          });
+   <GoogleLogin
+  width="300"               // wider button
+  size="large"              // larger size
+  theme="outline"           // light style, no solid fill
+  shape="rectangular"       // rectangular shape (no circle)
+  onSuccess={async (credentialResponse) => {
+    try {
+      const res = await API.post(
+        "/auth/google",
+        { idToken: credentialResponse.credential }
+      );
 
-          const data = await res.json();
+      const data = res.data;
 
-          if (!res.ok) {
-            toast.error(data.message || "Google Sign-In failed");
-            return;
-          }
+      if (!res.status || res.status !== 200) {
+        toast.error(data.message || "Google Sign-In failed");
+        return;
+      }
 
-          localStorage.setItem("token", data.token);
-          toast.success("Google Sign-In successful! 🎉");
-          setTimeout(() => navigate("/dashboard"), 2000);
-        } catch (err) {
-          console.error("Google Sign-In Error:", err);
-          toast.error("Something went wrong. Try again later.");
-        }
-      }}
-      onError={() => {
-        toast.error("Google Sign-In was cancelled or failed.");
-      }}
-    />
+      localStorage.setItem("token", data.token);
+      toast.success("Google Sign-In successful! 🎉");
+      setTimeout(() => navigate("/dashboard"), 2000);
+    } catch (err) {
+      console.error("Google Sign-In Error:", err);
+      toast.error("Something went wrong. Try again later.");
+    }
+  }}
+  onError={() => {
+    toast.error("Google Sign-In was cancelled or failed.");
+  }}
+/>
   </div>
 </div>
 

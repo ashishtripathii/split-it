@@ -8,7 +8,7 @@ import "./index.css";
 const root = ReactDOM.createRoot(document.getElementById("root"));
 
 root.render(
-  <GoogleOAuthProvider clientId="381721950624-2ip8rr31rd0up0jmicinkm5iue7oqmq7.apps.googleusercontent.com">  {/* ✅ Replace this with your real client ID */}
+<GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID}>
     <BrowserRouter>
       <App />
     </BrowserRouter>

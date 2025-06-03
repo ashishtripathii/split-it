@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import DashBoardAside from "../components/DashBoardAside";
-
+import API from "../utils/axios"; // Adjust the import path as necessary
 const Dashboard = () => {
   const [userData, setUserData] = useState(null);
   const [groups, setGroups] = useState([]);
@@ -9,7 +9,7 @@ const Dashboard = () => {
   const [expandedGroupId, setExpandedGroupId] = useState(null);
   const [groupDetails, setGroupDetails] = useState({});
 
-  useEffect(() => {
+   useEffect(() => {
     const fetchUserAndGroups = async () => {
       const token = localStorage.getItem("token");
 
@@ -20,12 +20,12 @@ const Dashboard = () => {
       }
 
       try {
-        const resUser = await axios.get("http://localhost:5000/api/auth/profile", {
+        const resUser = await API.get("/auth/profile", {
           headers: { Authorization: `Bearer ${token}` },
         });
         setUserData(resUser.data.user);
 
-        const resGroups = await axios.get("http://localhost:5000/api/groups/joined", {
+        const resGroups = await API.get("/groups/joined", {
           headers: { Authorization: `Bearer ${token}` },
         });
         setGroups(resGroups.data.groups || []);
@@ -39,14 +39,6 @@ const Dashboard = () => {
     fetchUserAndGroups();
   }, []);
 
-  const getInitials = (nameOrEmail) => {
-    if (!nameOrEmail) return "U";
-    const words = nameOrEmail.trim().split(" ");
-    return words.length > 1
-      ? words[0][0] + words[1][0]
-      : nameOrEmail[0].toUpperCase();
-  };
-
   const handleToggleGroup = async (groupId) => {
     if (expandedGroupId === groupId) {
       setExpandedGroupId(null); // Collapse
@@ -55,7 +47,7 @@ const Dashboard = () => {
 
     try {
       const token = localStorage.getItem("token");
-      const res = await axios.get(`http://localhost:5000/api/groups/details/${groupId}`, {
+      const res = await API.get(`/groups/details/${groupId}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
 
@@ -68,7 +60,13 @@ const Dashboard = () => {
       console.error("Error fetching group details:", err);
     }
   };
-
+   const getInitials = (nameOrEmail) => {
+    if (!nameOrEmail) return "U";
+    const words = nameOrEmail.trim().split(" ");
+    return words.length > 1
+      ? words[0][0] + words[1][0]
+      : nameOrEmail[0].toUpperCase();
+  };
   return (
     <div className="flex min-h-screen bg-gradient-to-br from-cyan-100 to-teal-50 font-mono">
       <DashBoardAside />

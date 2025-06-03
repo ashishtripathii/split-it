@@ -3,7 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import DashBoardAside from "../components/DashBoardAside";
 import { FiEye, FiEyeOff } from "react-icons/fi";
-
+import API from "../utils/axios"; // Adjust the import path as necessary
 export default function ResetPasswordPage() {
   const { token } = useParams();
   const navigate = useNavigate();
@@ -12,39 +12,37 @@ export default function ResetPasswordPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
 
-  const handleReset = async (e) => {
-    e.preventDefault();
+const handleReset = async (e) => {
+  e.preventDefault();
 
-    if (!password || !confirm) {
-      toast.error("All fields are required", { position: "top-center" });
-      return;
-    }
+  if (!password || !confirm) {
+    toast.error("All fields are required", { position: "top-center" });
+    return;
+  }
 
-    if (password !== confirm) {
-      toast.error("Passwords do not match", { position: "top-center" });
-      return;
-    }
+  if (password !== confirm) {
+    toast.error("Passwords do not match", { position: "top-center" });
+    return;
+  }
 
-    try {
-      const res = await fetch(`http://localhost:5000/api/auth/reset-password/${token}`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ password }),
-      });
+  if (!token) {
+    toast.error("Invalid or missing token", { position: "top-center" });
+    return;
+  }
 
-      const data = await res.json();
-      if (!res.ok) {
-        toast.error(data.message || "Reset failed", { position: "top-center" });
-        return;
-      }
+  try {
+    const { data } = await API.post(`/auth/reset-password/${token}`, { password });
 
-      toast.success("Password reset successful!", { position: "top-center" });
-      setTimeout(() => navigate("/login"), 2000);
-    } catch (err) {
-      console.error("Reset Error:", err);
-      toast.error("Something went wrong. Try again later.", { position: "top-center" });
-    }
-  };
+    toast.success("Password reset successful!", { position: "top-center" });
+    setTimeout(() => navigate("/login"), 2000);
+  } catch (err) {
+    console.error("Reset Error:", err);
+    const message =
+      err.response?.data?.message || "Something went wrong. Try again later.";
+    toast.error(message, { position: "top-center" });
+  }
+};
+
 
   return (
     <div className="flex min-h-screen bg-gradient-to-br from-cyan-100 to-teal-50 font-mono">

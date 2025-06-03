@@ -11,6 +11,10 @@ import Dashboard from './pages/Dashboard';
 import ResetPasswordPage from "./pages/ResetPasswordPage";
 import CreateGroup from "./pages/CreateGroup";
 import JoinGroupPage from "./pages/JoinGroupPage";
+import PrivateRoute from './utils/PrivateRoute';
+import ContactPage from './pages/Contact';
+import About from './pages/About';
+import Feedback from './pages/Feedback';
 const App = () => {
   return (
   
@@ -25,11 +29,31 @@ const App = () => {
           <Route path="*" element={<NotFound />} />
           <Route path='/register' element={<RegisterPage />} />
           <Route path='/login' element={<LoginPage />} />
-          <Route path='/dashboard' element={<Dashboard />} />
-          <Route path="/reset-password/:token" element={<ResetPasswordPage />} />
-          <Route path="/create-group" element={<CreateGroup />} />
-          <Route path="/group/join/:groupId" element={<JoinGroupPage />} />
-          <Route path="/join-group" element={<JoinGroupPage />} />
+          <Route path='/about' element={<About />} />
+          <Route path="/feedback" element={<Feedback />} />
+
+          <Route path='/contact' element={<ContactPage />} />
+         <Route path="/reset-password/:token" element={<ResetPasswordPage />} />
+          <Route path='/dashboard' element={
+            <PrivateRoute>
+              <Dashboard />
+            </PrivateRoute>
+          } />
+            <Route path='/create-group' element={
+            <PrivateRoute>
+              <CreateGroup />
+            </PrivateRoute>
+          } />
+             <Route path='/group/join/:groupId' element={
+            <PrivateRoute>
+            <JoinGroupPage />
+            </PrivateRoute>
+          } />
+          <Route path='/join-group' element={
+            <PrivateRoute>
+              <JoinGroupPage />
+            </PrivateRoute>
+          } />
         </Routes>
       </Layout>
   

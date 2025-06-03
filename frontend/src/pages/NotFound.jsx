@@ -6,10 +6,10 @@ export default function NotFound() {
       
 
   return (
-    <div className="flex h-screen items-center justify-center bg-gradient-to-r from-blue-300 to-blue-500">
+    <div className="flex h-screen items-center justify-center bg-gradient-to-r from-teal-200 to-blue-100">
       <div className="text-center">
-        <h1 className="text-9xl font-extrabold text-white drop-shadow-md">404</h1>
-        <p className="mt-4 text-3xl font-semibold text-white">Oops! Page Not Found</p>
+        <h1 className="text-9xl font-extrabold text-slate-600 drop-shadow-md">404</h1>
+        <p className="mt-4 text-3xl font-semibold text-teal-800">Oops! Page Not Found</p>
         <p className="mt-2 text-lg text-blue-100">
           Sorry, the page you are looking for doesn’t exist.
         </p>

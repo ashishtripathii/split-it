@@ -1,10 +1,9 @@
 import React, { useState, useEffect } from "react";
-import { FaMoneyBillWave, FaBalanceScale, FaUsers } from "react-icons/fa";
+import { FaMoneyBillWave, FaBalanceScale, FaUsers, FaStar } from "react-icons/fa";
 import { Link } from "react-router-dom";
 import homepage from "../assets/home.png";
-import maleImg from "../assets/male.jpg";
-import femaleImg from "../assets/female.png";
-
+import API from "../utils/axios"; // <-- Import your axios instance
+import user from "../assets/male.jpg"; // Placeholder for user avatar
 function HomePage() {
   const headings = [
     "Welcome to Split It",
@@ -36,52 +35,29 @@ function HomePage() {
     }
   }, [charIndex, index]);
 
-  const testimonials = [
-    {
-      name: "Ayesha K.",
-      feedback:
-        "Split It made our trip expenses so easy to manage and settle. Highly recommend! The UI is smooth and intuitive.",
-      img: femaleImg,
-      alt: "Female User",
-    },
-    {
-      name: "Ravi M.",
-      feedback:
-        "Clear balances and flexible splitting helped me avoid awkward money talks. Best app for groups!",
-      img: maleImg,
-      alt: "Male User",
-    },
-    {
-      name: "Sana P.",
-      feedback:
-        "Perfect for roommates! No more confusion about who owes what. Simple and effective.",
-      img: femaleImg,
-      alt: "Female User",
-    },
-    {
-      name: "Arjun S.",
-      feedback:
-        "Using Split It during our group trips saved us so much hassle. Easy to use and reliable.",
-      img: maleImg,
-      alt: "Male User",
-    },
-    {
-      name: "Fatima L.",
-      feedback:
-        "I love how easy it is to add expenses and split with friends. Highly recommend for any group activity.",
-      img: femaleImg,
-      alt: "Female User",
-    },
-  ];
-
+  // Fetch feedbacks from backend
+  const [feedbacks, setFeedbacks] = useState([]);
   const [currentTestimonial, setCurrentTestimonial] = useState(0);
 
   useEffect(() => {
+    const fetchFeedbacks = async () => {
+      try {
+        const res = await API.get("/general/all-feedback");
+        setFeedbacks(res.data);
+      } catch (err) {
+        setFeedbacks([]);
+      }
+    };
+    fetchFeedbacks();
+  }, []);
+
+  useEffect(() => {
+    if (feedbacks.length === 0) return;
     const interval = setInterval(() => {
-      setCurrentTestimonial((prev) => (prev + 1) % testimonials.length);
+      setCurrentTestimonial((prev) => (prev + 1) % feedbacks.length);
     }, 5000);
     return () => clearInterval(interval);
-  }, [testimonials.length]);
+  }, [feedbacks]);
 
   const goToTestimonial = (idx) => {
     setCurrentTestimonial(idx);
@@ -165,42 +141,86 @@ function HomePage() {
         </div>
       </section>
 
-      {/* Testimonials Section */}
-      <section className="py-20 px-6 bg-gradient-to-b from-cyan-100 to-teal-50">
-        <div className="max-w-5xl mx-auto text-center">
-          <h2 className="text-4xl font-bold text-teal-800 font-serif mb-12">
-            What Our Users Say
-          </h2>
-          <div className="bg-white rounded-3xl shadow-lg p-10 flex flex-col items-center">
+<section className="py-20 px-6 bg-gradient-to-b from-cyan-100 to-teal-50">
+  <div className="max-w-5xl mx-auto text-center">
+    <h2 className="text-4xl font-bold text-teal-800 font-serif mb-12">
+      What Our Users Say
+    </h2>
+    {feedbacks.length > 0 ? (
+      <div className="bg-white rounded-3xl shadow-lg p-10 flex flex-col items-center">
+        <div className="flex items-center justify-center gap-6 w-full">
+          {/* Left Arrow */}
+          <button
+            onClick={() =>
+              setCurrentTestimonial(
+                (currentTestimonial - 1 + feedbacks.length) % feedbacks.length
+              )
+            }
+            className="p-2 rounded-full bg-teal-50 hover:bg-teal-200 text-teal-700 text-2xl transition"
+            aria-label="Previous"
+          >
+            &#8592;
+          </button>
+          {/* Feedback Content */}
+          <div className="flex flex-col items-center flex-1 min-w-0">
             <img
-              src={testimonials[currentTestimonial].img}
-              alt={testimonials[currentTestimonial].alt}
-              className="w-28 h-28 rounded-full object-cover shadow-lg mb-6"
+              src={user}
+              alt="User"
+              className="w-20 h-20 rounded-full object-cover mb-4 border-2 shadow"
             />
-            <p className="text-gray-900 text-2xl md:text-xl font-serif mb-8 italic max-w-4xl mx-auto px-6 leading-relaxed">
-              "{testimonials[currentTestimonial].feedback}"
+            <p className="text-gray-900 text-2xl md:text-xl font-serif mb-4 italic max-w-3xl mx-auto px-6 leading-relaxed ">
+              "{feedbacks[currentTestimonial].feedback}"
             </p>
+            <div className="flex justify-center mb-2">
+              {[...Array(5)].map((_, i) => (
+                <FaStar
+                  key={i}
+                  className={
+                    i < (feedbacks[currentTestimonial].rating || 0)
+                      ? "text-teal-400"
+                      : "text-gray-300"
+                  }
+                  size={24}
+                />
+              ))}
+            </div>
             <h3 className="text-teal-800 text-2xl font-semibold font-serif">
-              - {testimonials[currentTestimonial].name}
+              - {feedbacks[currentTestimonial].name || "Anonymous"}
             </h3>
           </div>
-
-          {/* Dots */}
-          <div className="flex justify-center mt-8 space-x-4">
-            {testimonials.map((_, idx) => (
-              <button
-                key={idx}
-                onClick={() => goToTestimonial(idx)}
-                className={`w-4 h-4 rounded-full transition-colors duration-300 ${
-                  idx === currentTestimonial
-                    ? "bg-teal-700"
-                    : "bg-teal-300 hover:bg-teal-500"
-                }`}
-              />
-            ))}
-          </div>
+          {/* Right Arrow */}
+          <button
+            onClick={() =>
+              setCurrentTestimonial(
+                (currentTestimonial + 1) % feedbacks.length
+              )
+            }
+            className="p-2 rounded-full bg-teal-50 hover:bg-teal-200 text-teal-700 text-2xl transition"
+            aria-label="Next"
+          >
+            &#8594;
+          </button>
         </div>
-      </section>
+        {/* Dots */}
+        <div className="flex justify-center mt-6 space-x-3">
+          {feedbacks.map((_, idx) => (
+            <button
+              key={idx}
+              onClick={() => goToTestimonial(idx)}
+              className={`w-4 h-4 rounded-full transition-colors duration-300 ${
+                idx === currentTestimonial
+                  ? "bg-teal-700"
+                  : "bg-teal-300 hover:bg-teal-500"
+              }`}
+            />
+          ))}
+        </div>
+      </div>
+    ) : (
+      <div className="text-gray-500 text-lg">No feedback yet.</div>
+    )}
+  </div>
+</section>
 
       {/* Blinking Cursor Style */}
       <style>{`

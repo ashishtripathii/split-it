@@ -22,8 +22,11 @@ app.use(cors({
 // Routes
 const authRoutes = require('./routes/authRoutes');
 const groupRoutes = require('./routes/groupRoutes');
+const generalRoutes = require('./routes/generalRoutes');
+app.use('/api/general', generalRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/groups', groupRoutes);
+
 
 // Base route for testing
 app.get('/', (req, res) => {
